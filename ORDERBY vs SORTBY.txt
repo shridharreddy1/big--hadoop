@@ -1,0 +1,102 @@
+ORDER BY VS SORT BY
+===================
+ORDER BY
+--------
+1. The ORDER BY clause is familar from other SQL dialects.
+2. It performs the 'total ordering of the query result set' i.e. ' all the data will be passed to a single reducer' which
+   will take longer time if we have larger datasets.
+3. Hive requires the LIMIT clause for ORDER BY as it will take longer time (if hives property 
+   hive.mapred.mode is set to 'strict' which is by default 'nonstrict'
+
+NOTE: In /usr/lib/hive/conf/hive-default.xml--> below property
+
+<property>
+  <name>hive.mapred.mode</name>
+  <value>nonstrict</value>
+  <description>The mode in which the hive operations are being performed. In strict mode, some risky queries are not allowed to run</description>
+</property>
+
+
+SORT BY
+-------
+3. Where as SORT BY (Hive's alternative to ORDER BY) , will orders the data only within each reducer and performs      the  'local ordering of the data' where each REDUCER'S OUTPUT will be SORTTED.
+
+4. Better perfomance is traded for total ordering.
+
+
+
+hive> select * from testudf;
+OK
+100	    Karan      	24000
+101	Gopal          	25000
+102	       RaviKanth	26000
+103	Ravi Prakash	270000
+104	Gopi Prakash	28000
+105	Ravi Prakash	29000
+106	Vishnu Prakash	31000
+107	Kasi Prakash	34000
+Time taken: 0.419 seconds
+
+hive> desc testudf;
+OK
+empid	int	
+ename	string	
+esal	int	
+Time taken: 0.197 seconds
+
+hive> select empid , ename , esal from testudf order by empid asc , esal desc;
+Total MapReduce jobs = 1
+Launching Job 1 out of 1
+Number of reduce tasks determined at compile time: 1
+In order to change the average load for a reducer (in bytes):
+  set hive.exec.reducers.bytes.per.reducer=<number>
+In order to limit the maximum number of reducers:
+  set hive.exec.reducers.max=<number>
+In order to set a constant number of reducers:
+  set mapred.reduce.tasks=<number>
+Starting Job = job_201304160610_0001, Tracking URL = http://localhost:50030/jobdetails.jsp?jobid=job_201304160610_0001
+Kill Command = /usr/lib/hadoop/bin/hadoop job  -Dmapred.job.tracker=localhost:8021 -kill job_201304160610_0001
+2013-04-16 06:15:57,723 Stage-1 map = 0%,  reduce = 0%
+2013-04-16 06:16:08,764 Stage-1 map = 100%,  reduce = 0%
+2013-04-16 06:16:18,977 Stage-1 map = 100%,  reduce = 100%
+Ended Job = job_201304160610_0001
+OK
+100	    Karan      	24000
+101	Gopal          	25000
+102	       RaviKanth	26000
+103	Ravi Prakash	270000
+104	Gopi Prakash	28000
+105	Ravi Prakash	29000
+106	Vishnu Prakash	31000
+107	Kasi Prakash	34000
+Time taken: 36.859 seconds
+
+hive> select empid , ename , esal from testudf sort  by empid asc , esal desc;
+Total MapReduce jobs = 1
+Launching Job 1 out of 1
+Number of reduce tasks not specified. Estimated from input data size: 1
+In order to change the average load for a reducer (in bytes):
+  set hive.exec.reducers.bytes.per.reducer=<number>
+In order to limit the maximum number of reducers:
+  set hive.exec.reducers.max=<number>
+In order to set a constant number of reducers:
+  set mapred.reduce.tasks=<number>
+Starting Job = job_201304160610_0002, Tracking URL = http://localhost:50030/jobdetails.jsp?jobid=job_201304160610_0002
+Kill Command = /usr/lib/hadoop/bin/hadoop job  -Dmapred.job.tracker=localhost:8021 -kill job_201304160610_0002
+2013-04-16 06:18:23,766 Stage-1 map = 0%,  reduce = 0%
+2013-04-16 06:18:31,316 Stage-1 map = 100%,  reduce = 0%
+2013-04-16 06:18:40,440 Stage-1 map = 100%,  reduce = 33%
+2013-04-16 06:18:41,451 Stage-1 map = 100%,  reduce = 100%
+Ended Job = job_201304160610_0002
+OK
+100	    Karan      	24000
+101	Gopal          	25000
+102	       RaviKanth	26000
+103	Ravi Prakash	270000
+104	Gopi Prakash	28000
+105	Ravi Prakash	29000
+106	Vishnu Prakash	31000
+107	Kasi Prakash	34000
+Time taken: 28.06 seconds
+hive> 
+
